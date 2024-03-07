@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Entity {
+  id              Int              @id @default(autoincrement())
+  name            String
+  entityType      EntityType
+  businessCode    String           @unique
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  adresses        Adress[]
+  contactChannels ContactChannel[]
+  identities      EntityIdentity[]
+  roles           EntityRole[]
+}
+
+model EntityIdentity {
+  id           Int          @id @default(autoincrement())
+  entityId     Int
+  identityType IdentityType
+  value        String
+  metadata     Json?
+  createdby    String
+  updatedby    String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  entity       Entity       @relation(fields: [entityId], references: [id])
+}
+
+model EntityRole {
+  id        Int      @id @default(autoincrement())
+  entityId  Int
+  role      Role
+  metadata  Json?
+  createdby String
+  updatedby String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entity    Entity   @relation(fields: [entityId], references: [id])
+}
+
+model Adress {
+  id         Int      @id @default(autoincrement())
+  street     String
+  number     String
+  postalCode String
+  city       String
+  locationId Int
+  entityId   Int
+  metadata   Json?
+  createdby  String
+  updatedby  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  entity     Entity   @relation(fields: [entityId], references: [id])
+  location   Location @relation(fields: [locationId], references: [id])
+}
+
+model ContactChannel {
+  id        Int                @id @default(autoincrement())
+  value     String
+  type      ContactChannelType
+  entityId  Int
+  metadata  Json?
+  createdby String
+  updatedby String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  entity    Entity             @relation(fields: [entityId], references: [id])
+}
+
+model Domain {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  businessCode String        @unique
+  description  String
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  values       DomainValue[]
+}
+
+model DomainValue {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  metadata  Json?
+  domainId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  domain    Domain   @relation(fields: [domainId], references: [id])
+}
+
+model Location {
+  id           Int          @id @default(autoincrement())
+  name         String
+  locationType LocationType
+  fiscalCode   String
+  metadata     Json         @default("{}")
+  parentId     Int?
+  adresses     Adress[]
+  parent       Location?    @relation("ParentChild", fields: [parentId], references: [id])
+  children     Location[]   @relation("ParentChild")
+}
+
+enum IdentityType {
+  RUT
+  PASSPORT
+  TAX_ID
+  ID_CARD
+  SOCIAL_SECURITY
+  DRIVERS_LICENSE
+  VOTER_ID
+  OTHER
+}
+
+enum LocationType {
+  COUNTRY
+  REGION
+  PROVINCE
+  CITY
+  MUNICIPALITY
+  LOCALITY
+}
+
+enum ContactChannelType {
+  PHONE_NUMBER
+  CELL_PHONE
+  EMAIL
+  FAX
+  WEBSITE_CONTACT_FORM
+  SOCIAL_MEDIA_MESSAGING
+  WEBSITE
+}
+
+enum EntityType {
+  LEGAL_PERSON
+  NATURAL_PERSON
+  NON_PROFIT_ORGANIZATION
+  GOVERNMENT_INSTITUTION
+  PUBLIC_COMPANY
+  BUSINESS_ASSOCIATION
+  EDUCATIONAL_INSTITUTION
+  FINANCIAL_ENTITY
+  RELIGIOUS_ORGANIZATION
+  SPORTS_ENTITY
+}
+
+enum Role {
+  USER
+  ADMIN
+}
